@@ -3,10 +3,14 @@ package com.example.retrofitapp
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Adapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.example.retrofitapp.retrofit.ProductApi
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.retrofitapp.adapter.ProductAdapter
+import com.example.retrofitapp.databinding.ActivityMainBinding
+import com.example.retrofitapp.retrofit.MainApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,17 +18,21 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class MainActivity : AppCompatActivity() {
+    lateinit var binding: ActivityMainBinding
+    private lateinit var adapter: ProductAdapter
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val tv1 = findViewById<TextView>(R.id.tv1)
-        val b1 = findViewById<Button>(R.id.b1)
-        val et = findViewById<EditText>(R.id.etNumber)
+        adapter = ProductAdapter()
+        binding.rcView.layoutManager = LinearLayoutManager(this)
+        binding.rcView.adapter = adapter
+
 
         //Http logging interceptor
         val interceptor = HttpLoggingInterceptor()
@@ -36,15 +44,14 @@ class MainActivity : AppCompatActivity() {
             .client(client)//client includes in retrofit for logging API actions
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        val productApi = retrofit.create(ProductApi::class.java)
+        val mainApi = retrofit.create(MainApi::class.java)
 
-        b1.setOnClickListener{
-            CoroutineScope(Dispatchers.IO).launch {
 
-                val product = productApi.getProductById(id = if (et.text.isEmpty()) 1
-                                                            else et.text.toString().toInt())
-                runOnUiThread{
-                    tv1.text = product.brand
+        CoroutineScope(Dispatchers.IO).launch {
+            val products = mainApi.getAllProducts()
+            runOnUiThread {
+                binding.apply {
+                    adapter.submitList(products.products)
                 }
             }
         }
