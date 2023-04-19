@@ -10,6 +10,8 @@ import com.example.retrofitapp.retrofit.ProductApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
@@ -24,8 +26,14 @@ class MainActivity : AppCompatActivity() {
         val b1 = findViewById<Button>(R.id.b1)
         val et = findViewById<EditText>(R.id.etNumber)
 
+        //Http logging interceptor
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+        val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
+
         val retrofit = Retrofit.Builder()
             .baseUrl("https://dummyjson.com")
+            .client(client)//client includes in retrofit for logging API actions
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val productApi = retrofit.create(ProductApi::class.java)
