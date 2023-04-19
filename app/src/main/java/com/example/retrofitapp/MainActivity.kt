@@ -6,7 +6,10 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.example.retrofitapp.retrofit.ProductApi
+import com.example.retrofitapp.databinding.ActivityMainBinding
+import com.example.retrofitapp.retrofit.AuthRequest
+import com.example.retrofitapp.retrofit.MainApi
+import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,17 +17,17 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class MainActivity : AppCompatActivity() {
+    lateinit var binding: ActivityMainBinding
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val tv1 = findViewById<TextView>(R.id.tv1)
-        val b1 = findViewById<Button>(R.id.b1)
-        val et = findViewById<EditText>(R.id.etNumber)
+
 
         //Http logging interceptor
         val interceptor = HttpLoggingInterceptor()
@@ -36,15 +39,24 @@ class MainActivity : AppCompatActivity() {
             .client(client)//client includes in retrofit for logging API actions
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        val productApi = retrofit.create(ProductApi::class.java)
+        val MainApi = retrofit.create(MainApi::class.java)
 
-        b1.setOnClickListener{
+        binding.bSign.setOnClickListener{
             CoroutineScope(Dispatchers.IO).launch {
 
-                val product = productApi.getProductById(id = if (et.text.isEmpty()) 1
-                                                            else et.text.toString().toInt())
+                val user = MainApi.auth(
+                    AuthRequest(
+                        binding.etUsername.text.toString(),
+                        binding.etPassword.text.toString()
+                    )
+                )
                 runOnUiThread{
-                    tv1.text = product.brand
+                    binding.apply {
+                        tvFirstName.text = user.firstName
+                        tvLastName.text = user.lastName
+                        //getting image with Picasso, including this image in ImageView
+                        Picasso.get().load(user.image).into(avatar)
+                    }
                 }
             }
         }
