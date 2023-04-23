@@ -3,15 +3,13 @@ package com.example.retrofitapp
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Adapter
-import android.widget.Button
-import android.widget.EditText
 import android.widget.SearchView.OnQueryTextListener
-import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.retrofitapp.adapter.ProductAdapter
 import com.example.retrofitapp.databinding.ActivityMainBinding
 import com.example.retrofitapp.retrofit.MainApi
+import com.example.retrofitapp.retrofit.models.AuthRequest
+import com.example.retrofitapp.retrofit.models.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.title = "Guest"
 
         adapter = ProductAdapter()
         binding.rcView.layoutManager = LinearLayoutManager(this)
@@ -48,8 +47,23 @@ class MainActivity : AppCompatActivity() {
         val mainApi = retrofit.create(MainApi::class.java)
 
 
+        var user: User? = null
+
+        CoroutineScope(Dispatchers.IO).launch {
+            user = mainApi.auth(
+                AuthRequest(
+                    "kminchelle",
+                    "0lelplR"
+                )
+            )
+            runOnUiThread {
+                supportActionBar?.title = user?.firstName
+            }
+        }
+
+
         //searchView - компонент строки поиска в android
-        binding.sv.setOnQueryTextListener(object : OnQueryTextListener{
+        binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
             override fun onQueryTextSubmit(key: String?): Boolean {
                 //запрос выполняется при нажатии на кнопку поиска
                 return true
@@ -58,7 +72,9 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextChange(key: String?): Boolean {
                 //запрос выполняется при изменении текста запроса
                 CoroutineScope(Dispatchers.IO).launch {
-                    val products = key?.let { mainApi.getProductsByName(it) }
+                    val products = key?.let {
+                        mainApi.getProductsByNameAsAuthUser(user?.token ?: "", it)
+                    }
                     runOnUiThread {
                         binding.apply {
                             adapter.submitList(products?.products)
@@ -67,9 +83,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 return true
             }
-
         })
-
-
     }
 }

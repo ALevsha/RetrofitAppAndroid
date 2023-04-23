@@ -1,4 +1,4 @@
-package com.example.retrofitapp.retrofit
+package com.example.retrofitapp.retrofit.models
 
 data class Products(
     val limit: Int,

@@ -1,17 +1,26 @@
 package com.example.retrofitapp.retrofit
 
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.Query
+import com.example.retrofitapp.retrofit.models.AuthRequest
+import com.example.retrofitapp.retrofit.models.Product
+import com.example.retrofitapp.retrofit.models.Products
+import com.example.retrofitapp.retrofit.models.User
+import retrofit2.http.*
 
 interface MainApi {
-    @GET("products/{id}")
+    @POST("auth/login")
+    suspend fun auth(@Body authRequest: AuthRequest): User
+
+    @GET("auth/products/{id}")
     suspend fun getProductById(@Path("id") id: Int): Product
 
-    @GET("products")
+    @GET("auth/products")
     suspend fun getAllProducts() : Products
 
-    @GET("products/search")
-    suspend fun getProductsByName(@Query("q") name: String) : Products
+    //Headers - заголовок, передающийся со всеми запросами, он не изменяется
+    @Headers("Content-Type: application/json")
+    @GET("auth/products/search")
+    suspend fun getProductsByNameAsAuthUser(
+        //добавочный Header - можно добовлять по мере надобности
+        @Header("Authorization") token: String,
+        @Query("q") name: String) : Products
 }

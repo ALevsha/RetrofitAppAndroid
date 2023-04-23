@@ -8,8 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.retrofitapp.R
 import com.example.retrofitapp.databinding.ListItemBinding
-import com.example.retrofitapp.retrofit.Product
-import com.google.android.material.transition.Hold
+import com.example.retrofitapp.retrofit.models.Product
 
 class ProductAdapter : ListAdapter<Product, ProductAdapter.Holder>(Comparator()) {
     class Holder(view: View) : RecyclerView.ViewHolder(view) {
