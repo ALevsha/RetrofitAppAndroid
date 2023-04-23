@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.Adapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.SearchView.OnQueryTextListener
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.retrofitapp.adapter.ProductAdapter
@@ -47,13 +48,28 @@ class MainActivity : AppCompatActivity() {
         val mainApi = retrofit.create(MainApi::class.java)
 
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val products = mainApi.getAllProducts()
-            runOnUiThread {
-                binding.apply {
-                    adapter.submitList(products.products)
-                }
+        //searchView - компонент строки поиска в android
+        binding.sv.setOnQueryTextListener(object : OnQueryTextListener{
+            override fun onQueryTextSubmit(key: String?): Boolean {
+                //запрос выполняется при нажатии на кнопку поиска
+                return true
             }
-        }
+
+            override fun onQueryTextChange(key: String?): Boolean {
+                //запрос выполняется при изменении текста запроса
+                CoroutineScope(Dispatchers.IO).launch {
+                    val products = key?.let { mainApi.getProductsByName(it) }
+                    runOnUiThread {
+                        binding.apply {
+                            adapter.submitList(products?.products)
+                        }
+                    }
+                }
+                return true
+            }
+
+        })
+
+
     }
 }
