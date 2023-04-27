@@ -3,10 +3,13 @@ package com.example.retrofitapp
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import com.example.retrofitapp.retrofit.ProductApi
+import android.widget.SearchView.OnQueryTextListener
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.retrofitapp.adapter.ProductAdapter
+import com.example.retrofitapp.databinding.ActivityMainBinding
+import com.example.retrofitapp.retrofit.MainApi
+import com.example.retrofitapp.retrofit.models.AuthRequest
+import com.example.retrofitapp.retrofit.models.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,17 +17,22 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class MainActivity : AppCompatActivity() {
+    lateinit var binding: ActivityMainBinding
+    private lateinit var adapter: ProductAdapter
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        supportActionBar?.title = "Guest"
 
-        val tv1 = findViewById<TextView>(R.id.tv1)
-        val b1 = findViewById<Button>(R.id.b1)
-        val et = findViewById<EditText>(R.id.etNumber)
+        adapter = ProductAdapter()
+        binding.rcView.layoutManager = LinearLayoutManager(this)
+        binding.rcView.adapter = adapter
+
 
         //Http logging interceptor
         val interceptor = HttpLoggingInterceptor()
@@ -36,17 +44,45 @@ class MainActivity : AppCompatActivity() {
             .client(client)//client includes in retrofit for logging API actions
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        val productApi = retrofit.create(ProductApi::class.java)
+        val mainApi = retrofit.create(MainApi::class.java)
 
-        b1.setOnClickListener{
-            CoroutineScope(Dispatchers.IO).launch {
 
-                val product = productApi.getProductById(id = if (et.text.isEmpty()) 1
-                                                            else et.text.toString().toInt())
-                runOnUiThread{
-                    tv1.text = product.brand
-                }
+        var user: User? = null
+
+        CoroutineScope(Dispatchers.IO).launch {
+            user = mainApi.auth(
+                AuthRequest(
+                    "kminchelle",
+                    "0lelplR"
+                )
+            )
+            runOnUiThread {
+                supportActionBar?.title = user?.firstName
             }
         }
+
+
+        //searchView - компонент строки поиска в android
+        binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
+            override fun onQueryTextSubmit(key: String?): Boolean {
+                //запрос выполняется при нажатии на кнопку поиска
+                return true
+            }
+
+            override fun onQueryTextChange(key: String?): Boolean {
+                //запрос выполняется при изменении текста запроса
+                CoroutineScope(Dispatchers.IO).launch {
+                    val products = key?.let {
+                        mainApi.getProductsByNameAsAuthUser(user?.token ?: "", it)
+                    }
+                    runOnUiThread {
+                        binding.apply {
+                            adapter.submitList(products?.products)
+                        }
+                    }
+                }
+                return true
+            }
+        })
     }
 }
