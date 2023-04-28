@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
 
         //Http logging interceptor
-        val interceptor = HttpLoggingInterceptor()
+       /* val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BODY
         val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
 
@@ -44,26 +44,26 @@ class MainActivity : AppCompatActivity() {
             .client(client)//client includes in retrofit for logging API actions
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        val mainApi = retrofit.create(MainApi::class.java)
+        val mainApi = retrofit.create(MainApi::class.java)*/
 
 
         var user: User? = null
 
-        CoroutineScope(Dispatchers.IO).launch {
-            user = mainApi.auth(
-                AuthRequest(
-                    "kminchelle",
-                    "0lelplR"
-                )
-            )
-            runOnUiThread {
-                supportActionBar?.title = user?.firstName
-            }
-        }
+//        CoroutineScope(Dispatchers.IO).launch {
+//            user = mainApi.auth(
+//                AuthRequest(
+//                    "kminchelle",
+//                    "0lelplR"
+//                )
+//            )
+//            runOnUiThread {
+//                supportActionBar?.title = user?.firstName
+//            }
+//        }
 
 
         //searchView - компонент строки поиска в android
-        binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
+        /*binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
             override fun onQueryTextSubmit(key: String?): Boolean {
                 //запрос выполняется при нажатии на кнопку поиска
                 return true
@@ -83,6 +83,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 return true
             }
-        })
+        })*/
     }
 }
